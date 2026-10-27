@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+builds:
+- id: unix
+  env:
+  - CGO_ENABLED=0
+  ldflags:
+  - -s
+  - -w
+  - -X github.com/stern/stern/cmd.version={{.Version}}
+  - -X github.com/stern/stern/cmd.commit={{.Commit}}
+  - -X github.com/stern/stern/cmd.date={{.Date}}
+  goos:
+  - linux
+  - darwin
+  goarch:
+  - amd64
+  - arm
+  - arm64
+- id: windows
+  env:
+  - CGO_ENABLED=0
+  ldflags:
+  - -s
+  - -w
+  - -X github.com/stern/stern/cmd.version={{.Version}}
+  - -X github.com/stern/stern/cmd.commit={{.Commit}}
+  - -X github.com/stern/stern/cmd.date={{.Date}}
+  goos:
+  - windows
+  goarch:
+  - amd64
+  - arm64
+archives:
+- id: tgz
+  ids:
+  - unix
+  - windows
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  formats:
+  - tar.gz
+  files:
+  - LICENSE
+  wrap_in_directory: false
+- id: zip
+  ids:
+  - windows
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  formats:
+  - zip
+  files:
+  - LICENSE
+  wrap_in_directory: false
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc
+dockers:
+- image_templates:
+  - "ghcr.io/stern/stern:latest"
+  - "ghcr.io/stern/stern:{{ .Major }}"
+  - "ghcr.io/stern/stern:{{ .Major }}.{{ .Minor }}"
+  - "ghcr.io/stern/stern:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+krews:
+- skip_upload: true
+  ids:
+  - tgz
+  homepage: https://github.com/stern/stern
+  description: |
+    Stern allows you to `tail` multiple pods on Kubernetes and multiple containers
+    within the pod. Each result is color coded for quicker debugging.
+
+    The query is a regular expression so the pod name can easily be filtered and
+    you don't need to specify the exact id (for instance omitting the deployment
+    id). If a pod is deleted it gets removed from tail and if a new pod is added it
+    automatically gets tailed.
+
+    When a pod contains multiple containers Stern can tail all of them too without
+    having to do this manually for each one. Simply specify the `container` flag to
+    limit what containers to show. By default all containers are listened to.
+  short_description: Multi pod and container log tailing
+winget:
+- name: stern
+  ids:
+  - zip
+  publisher: stern
+  short_description: "Stern allows you to tail multiple pods on Kubernetes and multiple containers within the pod. Each result is color coded for quicker debugging."
+  package_identifier: stern.stern
+  publisher_url: https://github.com/stern
+  homepage: https://github.com/stern/stern
+  commit_author:
+    name: "{{ .Env.COMMIT_AUTHOR_NAME }}"
+    email: "{{ .Env.COMMIT_AUTHOR_EMAIL }}"
+  commit_msg_template: 'chore: release {{.PackageIdentifier}} {{.Tag}}'
+  release_notes_url: https://github.com/stern/stern/releases/tag/{{.Tag}}
+  publisher_support_url: https://github.com/stern/stern/issues
+  license: Apache-2.0 license
+  license_url: https://github.com/stern/stern/blob/HEAD/LICENSE
+  tags:
+  - cli
+  - shell
+  - kubernetes
+  - tail
+  repository:
+    owner: stern
+    name: winget-pkgs
+    branch: 'chore/stern-{{.Version}}'
+    token: "{{ .Env.COMMIT_AUTHOR_TOKEN }}"
+    pull_request:
+      enabled: true
+      draft: false
+      base:
+        owner: microsoft
+        name: winget-pkgs
+        branch: master
